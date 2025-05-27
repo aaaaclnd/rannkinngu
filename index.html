@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>アニメランクバトル</title>
+    <style>
+        /* 全体のスタイリング */
+        body {
+            font-family: 'Arial', sans-serif;
+            max-width: 600px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #f0f0f0;
+        }
+
+        .config-panel {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: white;
+            border-radius: 10px;
+        }
+
+        .rank-section {
+            margin-bottom: 25px;
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            position: relative;
+        }
+
+        .rank-header {
+            color: #fff;
+            padding: 5px 10px;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            display: inline-block;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 5px;
+            flex-wrap: wrap;
+        }
+
+        input {
+            padding: 8px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            flex-grow: 1;
+            min-width: 200px;
+        }
+
+        button {
+            background: #2f3542;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        button:hover {
+            background: #57606f;
+        }
+
+        #result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 10px;
+        }
+
+        .edit-btn {
+            position: absolute;
+            right: 15px;
+            top: 15px;
+            padding: 2px 8px;
+            font-size: 0.8em;
+        }
+    </style>
+</head>
+<body>
+    <div class="config-panel">
+        <button onclick="editAllSettings()">設定を編集</button>
+    </div>
+
+    <div id="rankContainer"></div>
+
+    <button onclick="validateInputs()">チェック！</button>
+    <div id="result"></div>
+
+    <script>
+        // 設定可能なランク構成
+        let rankConfig = [
+            { name: '神', count: 1, color: '#ff4757' },
+            { name: '最高', count: 2, color: '#ff7f50' },
+            { name: '面白い', count: 3, color: '#2ed573' },
+            { name: '普通', count: 4, color: '#747d8c' }
+        ];
+
+        // ランク構成をレンダリング
+        function renderRanks() {
+            const container = document.getElementById('rankContainer');
+            container.innerHTML = '';
+            
+            rankConfig.forEach((rank, index) => {
+                const inputs = Array(rank.count).fill()
+                    .map(() => `<input type="text" data-rank-index="${index}" placeholder="入力してください">`)
+                    .join('');
+                
+                const section = `
+                    <div class="rank-section">
+                        <div class="rank-header" style="background:${rank.color}">
+                            ${rank.name}（${rank.count}作品）
+                            <button class="edit-btn" onclick="editRank(${index})">編集</button>
+                        </div>
+                        <div class="input-group">${inputs}</div>
+                    </div>
+                `;
+                container.innerHTML += section;
+            });
+        }
+
+        // ランク編集
+        function editRank(index) {
+            const newName = prompt('新しいランク名を入力してください', rankConfig[index].name);
+            if (newName) rankConfig[index].name = newName;
+            
+            const newCount = parseInt(prompt('新しい作品数を入力してください', rankConfig[index].count));
+            if (!isNaN(newCount)) rankConfig[index].count = newCount;
+            
+            renderRanks();
+        }
+
+        // 全体設定編集
+        function editAllSettings() {
+            rankConfig.forEach((_, index) => editRank(index));
+        }
+
+        // 入力検証
+        function validateInputs() {
+            const allInputs = [...document.querySelectorAll('input')];
+            const entries = {};
+            let isValid = true;
+            const allTitles = [];
+
+            rankConfig.forEach((rank, index) => {
+                const values = allInputs
+                    .filter(input => input.dataset.rankIndex == index)
+                    .map(input => input.value.trim());
+                
+                entries[rank.name] = values;
+                
+                // 空欄チェック
+                if (values.some(v => !v)) isValid = false;
+                
+                // 重複チェック
+                values.forEach(v => {
+                    if (v && allTitles.includes(v)) {
+                        alert(`"${v}" が重複しています！`);
+                        isValid = false;
+                    }
+                    if (v) allTitles.push(v);
+                });
+            });
+
+            // 結果表示
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = isValid 
+                ? '<h2 style="color:green;">🎉 完成！ プレイヤーと答え合わせしましょう！</h2>'
+                : '<h2 style="color:red;">⚠️ 入力が不完全です！空欄や重複を確認してください</h2>';
+        }
+
+        // 初期表示
+        renderRanks();
+    </script>
+</body>
+</html>
